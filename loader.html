@@ -39,7 +39,7 @@
 <script type="text/javascript" src="js/loader/MTLLoader.js"></script>
 <script type="text/javascript" src="js/loader/TGALoader.js"></script>
 <script type="text/javascript">
-    eruda.init();
+   // eruda.init();
 
     var u = navigator.userAgent;
     var isAndroid = u.indexOf('Android') > -1 || u.indexOf('Adr') > -1; // android终端
@@ -58,7 +58,7 @@
     var clock = new THREE.Clock();
 
     init();
-    initSourceWebcam();
+   // initSourceWebcam();
 
     function init(){
         container = document.createElement('div');
@@ -71,6 +71,29 @@
         // 环境光
         scene.add(new THREE.AmbientLight(4210752, 3));
         // 平行光
+
+        //给场景增加环境光
+        let Ambient = new THREE.AmbientLight(0x404040, 2);
+        scene.add(Ambient);
+        //给场景添加太阳光
+        let Sun = new THREE.DirectionalLight(0xffffff, 1);
+        Sun.position.set(20, 20, 20);
+        Sun.castShadow = true;
+        //设置相机渲染面积
+        Sun.shadow.camera.near = 0.01;
+        Sun.shadow.camera.far = 60;
+        Sun.shadow.camera.top = 22;
+        Sun.shadow.camera.bottom = -22;
+        Sun.shadow.camera.left = -35;
+        Sun.shadow.camera.right = 35;// 
+        //设置阴影分辨率
+        Sun.shadow.mapSize.width = 2048;  
+        // default
+        Sun.shadow.mapSize.height = 2048; // default
+        //阴影限制
+        Sun.shadow.radius = 1;scene.add(Sun);
+        scene.add(Sun);
+
         var light = new THREE.DirectionalLight(16777215, 1);
         light.position.set(0, 50, 50);
         scene.add(light);
@@ -78,10 +101,11 @@
         var axes = new THREE.AxisHelper(30);
         scene.add(axes);
 
+        scene.background = new THREE.Color(0xeaeaea);
         // 加载提示
         var manager = new THREE.LoadingManager();
         manager.onProgress = function(item, loaded, total){
-            console.log(item, loaded, total);
+            console.log("manager onProgress:",item, loaded, total);
         };
 
         var onProgress = function(xhr){
@@ -100,7 +124,20 @@
         var fbx_loader = new THREE.FBXLoader(manager);
 
         // fbx静态模型
-        fbx_loader.load('./models/miku/miku.fbx', function(object){
+        //fbx_loader.load('./model/luna/luna.fbx', function(object){
+        //fbx_loader.load('./model/tifa-nude/source/tifa.fbx', function(object){
+        //fbx_loader.load('./models/miku/miku1.fbx', function(object){
+        fbx_loader.load('./model/tifa/PC0002_01_lod0.fbx', function(object){
+            object.traverse((obj)=>{
+                if(obj instanceof THREE.Mesh){
+                        obj.material.emissive=new THREE.Color(1,1,1);
+                        //obj.material.emissive=obj.material.color;
+                        obj.material.emissiveIntensity=1;
+                        obj.material.emissiveMap=obj.material.map;
+
+                }}
+            );
+
             object.scale.multiplyScalar(.1);
 
             scene.add(object);
@@ -230,6 +267,14 @@
             }
         }
         controls.update();
+
+        renderer.autoClear = false
+        renderer.clear()
+        renderer.outputEncoding = null //THREE.RGBDEncoding
+        renderer.render(scene, camera)
+        //校正鱼群颜色
+        renderer.outputEncoding = THREE.GammaEncoding
+
         renderer.render( scene, camera );
     }
 
